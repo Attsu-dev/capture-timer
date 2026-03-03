@@ -4,8 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>30分タイマー</title>
+    <title>謎解き公演タイマー</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+JP:wght@300;400;700&display=swap');
+
+        :root {
+            --bg: #0a0c10;
+            --panel: #0f1318;
+            --border: #1e2530;
+            --accent: #00e5ff;
+            --accent-dim: #007a99;
+            --warn: #ff9100;
+            --danger: #ff3c3c;
+            --ok: #00e676;
+            --text: #d0dce8;
+            --text-dim: #4a5a6a;
+            --mono: 'Share Tech Mono', monospace;
+            --sans: 'Noto Sans JP', sans-serif;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -13,171 +30,601 @@
         }
 
         body {
-            background: #fff;
-            color: #111;
-            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-            min-height: 100dvh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            gap: 40px;
+            padding: 24px 16px;
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 229, 255, 0.06) 0%, transparent 70%);
         }
 
-        .time {
-            font-size: 96px;
-            font-weight: 200;
-            letter-spacing: -0.03em;
-            line-height: 1;
-            font-variant-numeric: tabular-nums;
-            transition: color 0.3s;
-        }
-
-        .time.danger {
-            color: #d00;
-        }
-
-        .controls {
+        /* ─── HEADER ─── */
+        .header {
+            width: 100%;
+            max-width: 900px;
             display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header h1 {
+            font-family: var(--mono);
+            font-size: 13px;
+            letter-spacing: .2em;
+            color: var(--accent-dim);
+            text-transform: uppercase;
+        }
+
+        .danger-zone {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-danger {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: .1em;
+            padding: 5px 12px;
+            border-radius: 3px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .btn-danger:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: rgba(255, 60, 60, .07);
+        }
+
+        .btn-danger.confirm-mode {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: rgba(255, 60, 60, .15);
+            animation: pulse-danger .6s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse-danger {
+            from {
+                box-shadow: 0 0 0 0 rgba(255, 60, 60, 0);
+            }
+
+            to {
+                box-shadow: 0 0 6px 2px rgba(255, 60, 60, .4);
+            }
+        }
+
+        /* ─── MAIN GRID ─── */
+        .grid {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto auto;
             gap: 12px;
         }
 
-        button {
-            background: none;
-            border: 1px solid #ccc;
-            color: #111;
-            font-size: 15px;
-            padding: 10px 28px;
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
             border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.15s, border-color 0.15s;
+            padding: 20px 24px;
+            position: relative;
+            overflow: hidden;
         }
 
-        button:hover {
-            background: #f4f4f4;
-            border-color: #aaa;
+        .panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, .015) 0%, transparent 60%);
+            pointer-events: none;
         }
 
-        button:active {
-            background: #e8e8e8;
+        .panel-label {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: .2em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 8px;
         }
 
-        #startBtn {
-            background: #111;
-            color: #fff;
-            border-color: #111;
-            min-width: 110px;
+        /* ─── TIMER ─── */
+        .panel-timer {
+            grid-column: 1;
+            grid-row: 1;
+            text-align: center;
         }
 
-        #startBtn:hover {
-            background: #333;
-            border-color: #333;
+        .timer-display {
+            font-family: var(--mono);
+            font-size: 72px;
+            line-height: 1;
+            letter-spacing: .04em;
+            color: var(--accent);
+            text-shadow: 0 0 30px rgba(0, 229, 255, .5), 0 0 60px rgba(0, 229, 255, .2);
+            transition: color .3s, text-shadow .3s;
         }
 
-        #startBtn:disabled {
-            background: #ccc;
-            border-color: #ccc;
-            cursor: default;
+        .timer-display.warn {
+            color: var(--warn);
+            text-shadow: 0 0 30px rgba(255, 145, 0, .5);
         }
 
-        .bar-wrap {
-            width: 280px;
-            height: 2px;
-            background: #eee;
-            border-radius: 1px;
+        .timer-display.danger {
+            color: var(--danger);
+            text-shadow: 0 0 30px rgba(255, 60, 60, .6);
+            animation: blink .8s step-end infinite;
         }
 
-        .bar {
+        @keyframes blink {
+            50% {
+                opacity: .4;
+            }
+        }
+
+        .timer-bar-wrap {
+            margin-top: 12px;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .timer-bar {
             height: 100%;
-            background: #111;
-            border-radius: 1px;
-            width: 100%;
-            transition: width 1s linear, background 0.3s;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width .5s linear, background .3s;
         }
 
-        .bar.danger {
-            background: #d00;
+        .timer-bar.warn {
+            background: var(--warn);
+        }
+
+        .timer-bar.danger {
+            background: var(--danger);
+        }
+
+        /* ─── QUESTION NUM ─── */
+        .panel-qnum {
+            grid-column: 2;
+            grid-row: 1;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .qnum-display {
+            font-family: var(--mono);
+            font-size: 60px;
+            line-height: 1;
+            color: var(--text);
+        }
+
+        .qnum-display span {
+            font-size: 24px;
+            color: var(--text-dim);
+            margin-left: 4px;
+        }
+
+        /* ─── ANSWER ─── */
+        .panel-answer {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .answer-text {
+            font-family: var(--mono);
+            font-size: 36px;
+            letter-spacing: .1em;
+            color: var(--ok);
+            text-shadow: 0 0 20px rgba(0, 230, 118, .3);
+            min-height: 44px;
+        }
+
+        /* ─── COMMENT ─── */
+        .panel-comment {
+            grid-column: 2;
+            grid-row: 2;
+        }
+
+        .comment-text {
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--text);
+            min-height: 44px;
+        }
+
+        /* ─── DELTA ─── */
+        .panel-delta {
+            grid-column: 1;
+            grid-row: 3;
+            text-align: center;
+        }
+
+        .delta-label-sub {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+        }
+
+        .delta-display {
+            font-family: var(--mono);
+            font-size: 40px;
+            line-height: 1;
+            letter-spacing: .05em;
+            transition: color .3s;
+        }
+
+        .delta-display.ahead {
+            color: var(--ok);
+            text-shadow: 0 0 16px rgba(0, 230, 118, .4);
+        }
+
+        .delta-display.behind {
+            color: var(--danger);
+            text-shadow: 0 0 16px rgba(255, 60, 60, .4);
+        }
+
+        .delta-display.neutral {
+            color: var(--text-dim);
+        }
+
+        /* ─── NEXT BUTTON ─── */
+        .panel-next {
+            grid-column: 2;
+            grid-row: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-next {
+            font-family: var(--mono);
+            font-size: 14px;
+            letter-spacing: .15em;
+            text-transform: uppercase;
+            padding: 16px 40px;
+            border-radius: 4px;
+            border: 1px solid var(--accent);
+            background: rgba(0, 229, 255, .07);
+            color: var(--accent);
+            cursor: pointer;
+            transition: all .2s;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-next::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(0, 229, 255, .1) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity .2s;
+        }
+
+        .btn-next:hover {
+            background: rgba(0, 229, 255, .14);
+            box-shadow: 0 0 20px rgba(0, 229, 255, .25);
+        }
+
+        .btn-next:hover::after {
+            opacity: 1;
+        }
+
+        .btn-next:active {
+            transform: scale(.98);
+        }
+
+        .btn-next:disabled {
+            border-color: var(--border);
+            color: var(--text-dim);
+            background: transparent;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* ─── CLEAR OVERLAY ─── */
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .85);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .overlay.show {
+            display: flex;
+        }
+
+        .overlay-title {
+            font-family: var(--mono);
+            font-size: 48px;
+            color: var(--ok);
+            text-shadow: 0 0 40px rgba(0, 230, 118, .6);
+            letter-spacing: .1em;
+        }
+
+        .overlay-sub {
+            font-family: var(--mono);
+            font-size: 18px;
+            color: var(--text-dim);
+            letter-spacing: .15em;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="time" id="time">30:00</div>
-
-    <div class="bar-wrap">
-        <div class="bar" id="bar"></div>
+    <!-- ─── HEADER ─── -->
+    <div class="header">
+        <h1>🔍 謎解き公演 ／ スタッフ用タイマー</h1>
+        <div class="danger-zone">
+            <button class="btn-danger" id="btn-pause" onclick="handlePause()">⏸ 一時停止</button>
+            <button class="btn-danger" id="btn-reset" onclick="handleReset()">↺ リセット</button>
+        </div>
     </div>
 
-    <div class="controls">
-        <button id="resetBtn">リセット</button>
-        <button id="startBtn">スタート</button>
+    <!-- ─── MAIN GRID ─── -->
+    <div class="grid">
+
+        <!-- タイマー -->
+        <div class="panel panel-timer">
+            <div class="panel-label">残り時間</div>
+            <div class="timer-display" id="timer-display">30:00</div>
+            <div class="timer-bar-wrap">
+                <div class="timer-bar" id="timer-bar" style="width:100%"></div>
+            </div>
+        </div>
+
+        <!-- 問題番号 -->
+        <div class="panel panel-qnum">
+            <div class="panel-label">現在の問題</div>
+            <div class="qnum-display" id="qnum-display">1<span>問目</span></div>
+        </div>
+
+        <!-- 答え -->
+        <div class="panel panel-answer">
+            <div class="panel-label">答え</div>
+            <div class="answer-text" id="answer-text">—</div>
+        </div>
+
+        <!-- コメント -->
+        <div class="panel panel-comment">
+            <div class="panel-label">コメント</div>
+            <div class="comment-text" id="comment-text">—</div>
+        </div>
+
+        <!-- 誤差 -->
+        <div class="panel panel-delta">
+            <div class="panel-label">クリアタイムとの差</div>
+            <div class="delta-label-sub" id="delta-target">（想定: —）</div>
+            <div class="delta-display neutral" id="delta-display">—</div>
+        </div>
+
+        <!-- 次へ -->
+        <div class="panel panel-next">
+            <button class="btn-next" id="btn-next" onclick="nextQuestion()">次の問題へ ▶</button>
+        </div>
+
+    </div>
+
+    <!-- ─── CLEAR OVERLAY ─── -->
+    <div class="overlay" id="overlay-clear">
+        <div class="overlay-title">✓ CLEARED</div>
+        <div class="overlay-sub">全問クリア！お疲れ様でした</div>
     </div>
 
     <script>
-        const TOTAL = 30 * 60;
-        let remaining = TOTAL;
-        let running = false;
-        let timer = null;
+        // ══════════════════════════════════════════════
+        //  問題データ（ここを編集してください）
+        // ══════════════════════════════════════════════
+        const QUESTIONS = [
+            { answer: 'あいうえお', comment: '最初の問題です。落ち着いて取り組みましょう。', clearMin: 1, clearSec: 0 },
+            { answer: 'かきくけこ', comment: '文字を正しく並び替えてみましょう。', clearMin: 2, clearSec: 0 },
+            { answer: 'さしすせそ', comment: '図の中に隠れたキーワードがあります。', clearMin: 3, clearSec: 0 },
+            { answer: 'たちつてと', comment: '数字と記号の対応表を使ってください。', clearMin: 4, clearSec: 0 },
+            { answer: 'なにぬねの', comment: '色に注目してください。', clearMin: 5, clearSec: 0 },
+            { answer: 'はひふへほ', comment: '矢印の方向に進むと答えが見えてきます。', clearMin: 6, clearSec: 0 },
+            { answer: 'まみむめも', comment: '2枚の紙を重ねると文字が浮かびます。', clearMin: 7, clearSec: 0 },
+            { answer: 'やゆよ', comment: '音に変換してみましょう。', clearMin: 8, clearSec: 0 },
+            { answer: 'らりるれろ', comment: '鏡に映したように読むと？', clearMin: 9, clearSec: 30 },
+            { answer: 'わをん', comment: '全体の地図と照らし合わせてください。', clearMin: 11, clearSec: 0 },
+            { answer: 'アイウエオ', comment: '今まで集めたピースをすべて使います。', clearMin: 12, clearSec: 30 },
+            { answer: 'カキクケコ', comment: '暗号表のルールが変わっています。', clearMin: 14, clearSec: 0 },
+            { answer: 'サシスセソ', comment: 'ここで大きなヒントが手に入ります。', clearMin: 15, clearSec: 0 },
+            { answer: 'タチツテト', comment: '各問の答えの頭文字を集めてください。', clearMin: 16, clearSec: 0 },
+            { answer: 'ナニヌネノ', comment: '最初の謎が伏線だったことに気づきましたか？', clearMin: 17, clearSec: 0 },
+            { answer: 'ハヒフヘホ', comment: '残り時間を意識して進めましょう。', clearMin: 18, clearSec: 0 },
+            { answer: 'マミムメモ', comment: 'スタッフに合言葉を伝えてください。', clearMin: 19, clearSec: 0 },
+            { answer: 'ヤユヨ', comment: 'カードとカードを組み合わせます。', clearMin: 21, clearSec: 0 },
+            { answer: 'ラリルレロ', comment: 'いよいよクライマックスです！', clearMin: 23, clearSec: 0 },
+            { answer: 'ワヲン', comment: '最後の答えをスタッフに伝えてゴールです！', clearMin: 25, clearSec: 0 },
+        ];
 
-        const timeEl = document.getElementById('time');
-        const barEl = document.getElementById('bar');
-        const startBtn = document.getElementById('startBtn');
-        const resetBtn = document.getElementById('resetBtn');
+        const TOTAL_SEC = 30 * 60;
 
-        function fmt(s) {
-            const m = Math.floor(s / 60);
-            const sec = s % 60;
-            return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-        }
+        // ══════════════════════════════════════════════
+        //  State
+        // ══════════════════════════════════════════════
+        let remaining = TOTAL_SEC;  // 残り秒
+        let elapsed = 0;          // 経過秒
+        let currentQ = 0;          // 0-indexed
+        let paused = false;
+        let finished = false;
+        let ticker = null;
 
-        function render() {
-            const danger = remaining <= 60;
-            timeEl.textContent = fmt(remaining);
-            timeEl.classList.toggle('danger', danger);
-            barEl.style.width = (remaining / TOTAL * 100) + '%';
-            barEl.classList.toggle('danger', danger);
-        }
+        // confirm モード用
+        let pauseConfirm = false;
+        let resetConfirm = false;
+        let pauseTimer = null;
+        let resetTimer = null;
 
+        // ══════════════════════════════════════════════
+        //  Start
+        // ══════════════════════════════════════════════
         function start() {
-            running = true;
-            startBtn.textContent = '一時停止';
-            timer = setInterval(() => {
+            ticker = setInterval(() => {
+                if (paused || finished) return;
                 remaining--;
-                render();
+                elapsed++;
                 if (remaining <= 0) {
-                    clearInterval(timer);
-                    running = false;
-                    startBtn.disabled = true;
-                    startBtn.textContent = 'スタート';
+                    remaining = 0;
+                    finished = true;
                 }
+                render();
             }, 1000);
-        }
-
-        function pause() {
-            running = false;
-            clearInterval(timer);
-            startBtn.textContent = '再開';
-        }
-
-        function reset() {
-            clearInterval(timer);
-            running = false;
-            remaining = TOTAL;
-            startBtn.disabled = false;
-            startBtn.textContent = 'スタート';
             render();
         }
 
-        startBtn.addEventListener('click', () => running ? pause() : start());
-        resetBtn.addEventListener('click', reset);
+        // ══════════════════════════════════════════════
+        //  Render
+        // ══════════════════════════════════════════════
+        function fmt(sec) {
+            const m = Math.floor(Math.abs(sec) / 60);
+            const s = Math.abs(sec) % 60;
+            return `${m}:${String(s).padStart(2, '0')}`;
+        }
 
-        document.addEventListener('keydown', e => {
-            if (e.code === 'Space') { e.preventDefault(); startBtn.click(); }
-            if (e.code === 'KeyR') reset();
-        });
+        function render() {
+            const q = QUESTIONS[currentQ];
 
-        render();
+            // --- timer ---
+            const timerEl = document.getElementById('timer-display');
+            const barEl = document.getElementById('timer-bar');
+            timerEl.textContent = fmt(remaining);
+
+            const pct = (remaining / TOTAL_SEC) * 100;
+            barEl.style.width = pct + '%';
+
+            timerEl.className = 'timer-display';
+            barEl.className = 'timer-bar';
+            if (remaining <= 60) { timerEl.classList.add('danger'); barEl.classList.add('danger'); }
+            else if (remaining <= 5 * 60) { timerEl.classList.add('warn'); barEl.classList.add('warn'); }
+
+            // --- question num ---
+            document.getElementById('qnum-display').innerHTML =
+                `${currentQ + 1}<span>問目</span>`;
+
+            // --- answer / comment ---
+            document.getElementById('answer-text').textContent = q.answer;
+            document.getElementById('comment-text').textContent = q.comment;
+
+            // --- delta ---
+            const targetSec = q.clearMin * 60 + q.clearSec;
+            const deltaSec = elapsed - targetSec;  // + = 遅れ, - = 早い
+            const deltaEl = document.getElementById('delta-display');
+            const sign = deltaSec >= 0 ? '+' : '-';
+            deltaEl.textContent = sign + fmt(Math.abs(deltaSec));
+            deltaEl.className = 'delta-display ' +
+                (Math.abs(deltaSec) < 5 ? 'neutral' : deltaSec > 0 ? 'behind' : 'ahead');
+
+            document.getElementById('delta-target').textContent =
+                `（想定クリア: ${fmt(targetSec)}）`;
+
+            // --- next button ---
+            document.getElementById('btn-next').disabled = finished || currentQ >= QUESTIONS.length - 1;
+
+            // --- clear overlay ---
+            if (currentQ >= QUESTIONS.length - 1 && elapsed > 0) {
+                // show after last next press — handled in nextQuestion
+            }
+        }
+
+        // ══════════════════════════════════════════════
+        //  Next question
+        // ══════════════════════════════════════════════
+        function nextQuestion() {
+            if (currentQ >= QUESTIONS.length - 1) return;
+            currentQ++;
+            if (currentQ === QUESTIONS.length - 1) {
+                // last question reached — no auto overlay
+            }
+            render();
+        }
+
+        // ══════════════════════════════════════════════
+        //  Pause  ← 誤操作防止: 2回押しで確定
+        // ══════════════════════════════════════════════
+        function handlePause() {
+            const btn = document.getElementById('btn-pause');
+
+            if (!pauseConfirm) {
+                // 1回目：確認モード
+                pauseConfirm = true;
+                btn.classList.add('confirm-mode');
+                btn.textContent = '本当に？ → もう一度押す';
+                pauseTimer = setTimeout(() => {
+                    pauseConfirm = false;
+                    btn.classList.remove('confirm-mode');
+                    btn.textContent = paused ? '▶ 再開' : '⏸ 一時停止';
+                }, 3000);
+            } else {
+                // 2回目：実行
+                clearTimeout(pauseTimer);
+                pauseConfirm = false;
+                btn.classList.remove('confirm-mode');
+                paused = !paused;
+                btn.textContent = paused ? '▶ 再開' : '⏸ 一時停止';
+            }
+        }
+
+        // ══════════════════════════════════════════════
+        //  Reset  ← 誤操作防止: 2回押しで確定
+        // ══════════════════════════════════════════════
+        function handleReset() {
+            const btn = document.getElementById('btn-reset');
+
+            if (!resetConfirm) {
+                resetConfirm = true;
+                btn.classList.add('confirm-mode');
+                btn.textContent = '本当に？ → もう一度押す';
+                resetTimer = setTimeout(() => {
+                    resetConfirm = false;
+                    btn.classList.remove('confirm-mode');
+                    btn.textContent = '↺ リセット';
+                }, 3000);
+            } else {
+                clearTimeout(resetTimer);
+                resetConfirm = false;
+                btn.classList.remove('confirm-mode');
+                btn.textContent = '↺ リセット';
+
+                // 実際のリセット
+                remaining = TOTAL_SEC;
+                elapsed = 0;
+                currentQ = 0;
+                paused = false;
+                finished = false;
+                document.getElementById('overlay-clear').classList.remove('show');
+                document.getElementById('btn-pause').textContent = '⏸ 一時停止';
+                render();
+            }
+        }
+
+        // ══════════════════════════════════════════════
+        //  Boot
+        // ══════════════════════════════════════════════
+        start();
     </script>
 </body>
 

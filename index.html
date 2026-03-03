@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>謎解き公演タイマー</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+JP:wght@300;400;700&display=swap');
@@ -27,63 +27,58 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
         }
 
         body {
             background: var(--bg);
             color: var(--text);
             font-family: var(--sans);
-            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 24px 16px;
-            background-image:
-                radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 229, 255, 0.06) 0%, transparent 70%);
+            height: 100dvh;
+            background-image: radial-gradient(ellipse 100% 40% at 50% 0%, rgba(0, 229, 255, 0.05) 0%, transparent 70%);
         }
 
         /* ─── HEADER ─── */
         .header {
-            width: 100%;
-            max-width: 900px;
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 24px;
-            padding-bottom: 12px;
+            padding: 10px 14px;
             border-bottom: 1px solid var(--border);
         }
 
         .header h1 {
             font-family: var(--mono);
-            font-size: 13px;
-            letter-spacing: .2em;
+            font-size: 10px;
+            letter-spacing: .15em;
             color: var(--accent-dim);
-            text-transform: uppercase;
         }
 
         .danger-zone {
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
 
         .btn-danger {
             font-family: var(--mono);
-            font-size: 11px;
-            letter-spacing: .1em;
-            padding: 5px 12px;
+            font-size: 10px;
+            padding: 5px 10px;
             border-radius: 3px;
             border: 1px solid var(--border);
             background: transparent;
             color: var(--text-dim);
             cursor: pointer;
             transition: all .2s;
-        }
-
-        .btn-danger:hover {
-            border-color: var(--danger);
-            color: var(--danger);
-            background: rgba(255, 60, 60, .07);
+            white-space: nowrap;
         }
 
         .btn-danger.confirm-mode {
@@ -91,6 +86,8 @@
             color: var(--danger);
             background: rgba(255, 60, 60, .15);
             animation: pulse-danger .6s ease-in-out infinite alternate;
+            font-size: 9px;
+            padding: 5px 7px;
         }
 
         @keyframes pulse-danger {
@@ -103,79 +100,77 @@
             }
         }
 
-        /* ─── MAIN GRID ─── */
-        .grid {
-            width: 100%;
-            max-width: 900px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: auto auto auto;
-            gap: 12px;
+        /* ─── MAIN ─── */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px 12px;
+            overflow: hidden;
+            min-height: 0;
         }
 
         .panel {
             background: var(--panel);
             border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 20px 24px;
+            border-radius: 8px;
+            padding: 10px 14px;
             position: relative;
             overflow: hidden;
         }
 
-        .panel::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255, 255, 255, .015) 0%, transparent 60%);
-            pointer-events: none;
-        }
-
         .panel-label {
             font-family: var(--mono);
-            font-size: 10px;
-            letter-spacing: .2em;
+            font-size: 9px;
+            letter-spacing: .18em;
             color: var(--text-dim);
             text-transform: uppercase;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
 
-        /* ─── TIMER ─── */
+        /* ROW 1: タイマー + 問題番号 */
+        .row-top {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
         .panel-timer {
-            grid-column: 1;
-            grid-row: 1;
+            flex: 3;
             text-align: center;
         }
 
         .timer-display {
             font-family: var(--mono);
-            font-size: 72px;
+            font-size: clamp(44px, 13vw, 64px);
             line-height: 1;
             letter-spacing: .04em;
             color: var(--accent);
-            text-shadow: 0 0 30px rgba(0, 229, 255, .5), 0 0 60px rgba(0, 229, 255, .2);
+            text-shadow: 0 0 24px rgba(0, 229, 255, .5);
             transition: color .3s, text-shadow .3s;
         }
 
         .timer-display.warn {
             color: var(--warn);
-            text-shadow: 0 0 30px rgba(255, 145, 0, .5);
+            text-shadow: 0 0 24px rgba(255, 145, 0, .5);
         }
 
         .timer-display.danger {
             color: var(--danger);
-            text-shadow: 0 0 30px rgba(255, 60, 60, .6);
+            text-shadow: 0 0 24px rgba(255, 60, 60, .6);
             animation: blink .8s step-end infinite;
         }
 
         @keyframes blink {
             50% {
-                opacity: .4;
+                opacity: .35;
             }
         }
 
         .timer-bar-wrap {
-            margin-top: 12px;
-            height: 4px;
+            margin-top: 6px;
+            height: 3px;
             background: var(--border);
             border-radius: 2px;
             overflow: hidden;
@@ -196,10 +191,8 @@
             background: var(--danger);
         }
 
-        /* ─── QUESTION NUM ─── */
         .panel-qnum {
-            grid-column: 2;
-            grid-row: 1;
+            flex: 2;
             text-align: center;
             display: flex;
             flex-direction: column;
@@ -208,148 +201,125 @@
 
         .qnum-display {
             font-family: var(--mono);
-            font-size: 60px;
+            font-size: clamp(36px, 10vw, 52px);
             line-height: 1;
             color: var(--text);
         }
 
         .qnum-display span {
-            font-size: 24px;
+            font-size: clamp(14px, 4vw, 20px);
             color: var(--text-dim);
-            margin-left: 4px;
+            margin-left: 2px;
         }
 
-        /* ─── ANSWER ─── */
+        /* ROW 2: 答え + 誤差 */
+        .row-mid {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
         .panel-answer {
-            grid-column: 1;
-            grid-row: 2;
+            flex: 3;
         }
 
         .answer-text {
             font-family: var(--mono);
-            font-size: 36px;
-            letter-spacing: .1em;
+            font-size: clamp(26px, 7vw, 36px);
+            letter-spacing: .08em;
             color: var(--ok);
-            text-shadow: 0 0 20px rgba(0, 230, 118, .3);
-            min-height: 44px;
+            text-shadow: 0 0 16px rgba(0, 230, 118, .3);
+            line-height: 1.2;
         }
 
-        /* ─── COMMENT ─── */
-        .panel-comment {
-            grid-column: 2;
-            grid-row: 2;
-        }
-
-        .comment-text {
-            font-size: 15px;
-            line-height: 1.7;
-            color: var(--text);
-            min-height: 44px;
-        }
-
-        /* ─── DELTA ─── */
         .panel-delta {
-            grid-column: 1;
-            grid-row: 3;
+            flex: 2;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
-        .delta-label-sub {
+        .delta-sub {
             font-family: var(--mono);
-            font-size: 11px;
+            font-size: 9px;
             color: var(--text-dim);
-            margin-bottom: 6px;
+            margin-bottom: 3px;
         }
 
         .delta-display {
             font-family: var(--mono);
-            font-size: 40px;
+            font-size: clamp(24px, 7vw, 34px);
             line-height: 1;
-            letter-spacing: .05em;
+            letter-spacing: .04em;
             transition: color .3s;
         }
 
         .delta-display.ahead {
             color: var(--ok);
-            text-shadow: 0 0 16px rgba(0, 230, 118, .4);
+            text-shadow: 0 0 12px rgba(0, 230, 118, .4);
         }
 
         .delta-display.behind {
             color: var(--danger);
-            text-shadow: 0 0 16px rgba(255, 60, 60, .4);
+            text-shadow: 0 0 12px rgba(255, 60, 60, .4);
         }
 
         .delta-display.neutral {
             color: var(--text-dim);
         }
 
-        /* ─── NEXT BUTTON ─── */
-        .panel-next {
-            grid-column: 2;
-            grid-row: 3;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* ROW 3: コメント (flex grow) */
+        .panel-comment {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
         }
 
-        .btn-next {
-            font-family: var(--mono);
+        .comment-text {
             font-size: 14px;
-            letter-spacing: .15em;
-            text-transform: uppercase;
-            padding: 16px 40px;
-            border-radius: 4px;
+            line-height: 1.8;
+            color: var(--text);
+        }
+
+        /* ROW 4: 次へボタン */
+        .btn-next {
+            flex-shrink: 0;
+            width: 100%;
+            font-family: var(--mono);
+            font-size: 15px;
+            letter-spacing: .18em;
+            padding: 18px;
+            border-radius: 8px;
             border: 1px solid var(--accent);
             background: rgba(0, 229, 255, .07);
             color: var(--accent);
             cursor: pointer;
-            transition: all .2s;
-            width: 100%;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-next::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(0, 229, 255, .1) 0%, transparent 60%);
-            opacity: 0;
-            transition: opacity .2s;
-        }
-
-        .btn-next:hover {
-            background: rgba(0, 229, 255, .14);
-            box-shadow: 0 0 20px rgba(0, 229, 255, .25);
-        }
-
-        .btn-next:hover::after {
-            opacity: 1;
+            transition: all .15s;
         }
 
         .btn-next:active {
-            transform: scale(.98);
+            transform: scale(.97);
+            background: rgba(0, 229, 255, .15);
         }
 
         .btn-next:disabled {
             border-color: var(--border);
             color: var(--text-dim);
             background: transparent;
-            cursor: not-allowed;
-            box-shadow: none;
         }
 
-        /* ─── CLEAR OVERLAY ─── */
+        /* CLEAR OVERLAY */
         .overlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, .85);
+            background: rgba(0, 0, 0, .88);
             z-index: 100;
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
         }
 
         .overlay.show {
@@ -358,86 +328,71 @@
 
         .overlay-title {
             font-family: var(--mono);
-            font-size: 48px;
+            font-size: 42px;
             color: var(--ok);
-            text-shadow: 0 0 40px rgba(0, 230, 118, .6);
-            letter-spacing: .1em;
+            text-shadow: 0 0 36px rgba(0, 230, 118, .6);
+            letter-spacing: .12em;
         }
 
         .overlay-sub {
-            font-family: var(--mono);
-            font-size: 18px;
+            font-family: var(--sans);
+            font-size: 16px;
             color: var(--text-dim);
-            letter-spacing: .15em;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- ─── HEADER ─── -->
     <div class="header">
-        <h1>🔍 謎解き公演 ／ スタッフ用タイマー</h1>
+        <h1>🔍 謎解き公演 / STAFF</h1>
         <div class="danger-zone">
             <button class="btn-danger" id="btn-pause" onclick="handlePause()">⏸ 一時停止</button>
             <button class="btn-danger" id="btn-reset" onclick="handleReset()">↺ リセット</button>
         </div>
     </div>
 
-    <!-- ─── MAIN GRID ─── -->
-    <div class="grid">
-
-        <!-- タイマー -->
-        <div class="panel panel-timer">
-            <div class="panel-label">残り時間</div>
-            <div class="timer-display" id="timer-display">30:00</div>
-            <div class="timer-bar-wrap">
-                <div class="timer-bar" id="timer-bar" style="width:100%"></div>
+    <div class="main">
+        <div class="row-top">
+            <div class="panel panel-timer">
+                <div class="panel-label">残り時間</div>
+                <div class="timer-display" id="timer-display">30:00</div>
+                <div class="timer-bar-wrap">
+                    <div class="timer-bar" id="timer-bar" style="width:100%"></div>
+                </div>
+            </div>
+            <div class="panel panel-qnum">
+                <div class="panel-label">問題</div>
+                <div class="qnum-display" id="qnum-display">1<span>問目</span></div>
             </div>
         </div>
 
-        <!-- 問題番号 -->
-        <div class="panel panel-qnum">
-            <div class="panel-label">現在の問題</div>
-            <div class="qnum-display" id="qnum-display">1<span>問目</span></div>
+        <div class="row-mid">
+            <div class="panel panel-answer">
+                <div class="panel-label">答え</div>
+                <div class="answer-text" id="answer-text">—</div>
+            </div>
+            <div class="panel panel-delta">
+                <div class="panel-label">進行差</div>
+                <div class="delta-sub" id="delta-target">想定 —</div>
+                <div class="delta-display neutral" id="delta-display">—</div>
+            </div>
         </div>
 
-        <!-- 答え -->
-        <div class="panel panel-answer">
-            <div class="panel-label">答え</div>
-            <div class="answer-text" id="answer-text">—</div>
-        </div>
-
-        <!-- コメント -->
         <div class="panel panel-comment">
             <div class="panel-label">コメント</div>
             <div class="comment-text" id="comment-text">—</div>
         </div>
 
-        <!-- 誤差 -->
-        <div class="panel panel-delta">
-            <div class="panel-label">クリアタイムとの差</div>
-            <div class="delta-label-sub" id="delta-target">（想定: —）</div>
-            <div class="delta-display neutral" id="delta-display">—</div>
-        </div>
-
-        <!-- 次へ -->
-        <div class="panel panel-next">
-            <button class="btn-next" id="btn-next" onclick="nextQuestion()">次の問題へ ▶</button>
-        </div>
-
+        <button class="btn-next" id="btn-next" onclick="nextQuestion()">次の問題へ ▶</button>
     </div>
 
-    <!-- ─── CLEAR OVERLAY ─── -->
     <div class="overlay" id="overlay-clear">
         <div class="overlay-title">✓ CLEARED</div>
         <div class="overlay-sub">全問クリア！お疲れ様でした</div>
     </div>
 
     <script>
-        // ══════════════════════════════════════════════
-        //  問題データ（ここを編集してください）
-        // ══════════════════════════════════════════════
         const QUESTIONS = [
             { answer: 'あいうえお', comment: '最初の問題です。落ち着いて取り組みましょう。', clearMin: 1, clearSec: 0 },
             { answer: 'かきくけこ', comment: '文字を正しく並び替えてみましょう。', clearMin: 2, clearSec: 0 },
@@ -462,124 +417,65 @@
         ];
 
         const TOTAL_SEC = 30 * 60;
+        let remaining = TOTAL_SEC, elapsed = 0, currentQ = 0;
+        let paused = false, finished = false;
+        let pauseConfirm = false, resetConfirm = false;
+        let pauseTimer = null, resetTimer = null;
 
-        // ══════════════════════════════════════════════
-        //  State
-        // ══════════════════════════════════════════════
-        let remaining = TOTAL_SEC;  // 残り秒
-        let elapsed = 0;          // 経過秒
-        let currentQ = 0;          // 0-indexed
-        let paused = false;
-        let finished = false;
-        let ticker = null;
-
-        // confirm モード用
-        let pauseConfirm = false;
-        let resetConfirm = false;
-        let pauseTimer = null;
-        let resetTimer = null;
-
-        // ══════════════════════════════════════════════
-        //  Start
-        // ══════════════════════════════════════════════
-        function start() {
-            ticker = setInterval(() => {
-                if (paused || finished) return;
-                remaining--;
-                elapsed++;
-                if (remaining <= 0) {
-                    remaining = 0;
-                    finished = true;
-                }
-                render();
-            }, 1000);
-            render();
-        }
-
-        // ══════════════════════════════════════════════
-        //  Render
-        // ══════════════════════════════════════════════
         function fmt(sec) {
             const m = Math.floor(Math.abs(sec) / 60);
             const s = Math.abs(sec) % 60;
             return `${m}:${String(s).padStart(2, '0')}`;
         }
 
+        setInterval(() => {
+            if (paused || finished) return;
+            remaining--; elapsed++;
+            if (remaining <= 0) { remaining = 0; finished = true; }
+            render();
+        }, 1000);
+
         function render() {
             const q = QUESTIONS[currentQ];
+            const td = document.getElementById('timer-display');
+            const tb = document.getElementById('timer-bar');
+            td.textContent = fmt(remaining);
+            tb.style.width = (remaining / TOTAL_SEC * 100) + '%';
+            td.className = 'timer-display' + (remaining <= 60 ? ' danger' : remaining <= 300 ? ' warn' : '');
+            tb.className = 'timer-bar' + (remaining <= 60 ? ' danger' : remaining <= 300 ? ' warn' : '');
 
-            // --- timer ---
-            const timerEl = document.getElementById('timer-display');
-            const barEl = document.getElementById('timer-bar');
-            timerEl.textContent = fmt(remaining);
-
-            const pct = (remaining / TOTAL_SEC) * 100;
-            barEl.style.width = pct + '%';
-
-            timerEl.className = 'timer-display';
-            barEl.className = 'timer-bar';
-            if (remaining <= 60) { timerEl.classList.add('danger'); barEl.classList.add('danger'); }
-            else if (remaining <= 5 * 60) { timerEl.classList.add('warn'); barEl.classList.add('warn'); }
-
-            // --- question num ---
-            document.getElementById('qnum-display').innerHTML =
-                `${currentQ + 1}<span>問目</span>`;
-
-            // --- answer / comment ---
+            document.getElementById('qnum-display').innerHTML = `${currentQ + 1}<span>問目</span>`;
             document.getElementById('answer-text').textContent = q.answer;
             document.getElementById('comment-text').textContent = q.comment;
 
-            // --- delta ---
-            const targetSec = q.clearMin * 60 + q.clearSec;
-            const deltaSec = elapsed - targetSec;  // + = 遅れ, - = 早い
-            const deltaEl = document.getElementById('delta-display');
-            const sign = deltaSec >= 0 ? '+' : '-';
-            deltaEl.textContent = sign + fmt(Math.abs(deltaSec));
-            deltaEl.className = 'delta-display ' +
-                (Math.abs(deltaSec) < 5 ? 'neutral' : deltaSec > 0 ? 'behind' : 'ahead');
+            const target = q.clearMin * 60 + q.clearSec;
+            const delta = elapsed - target;
+            const dd = document.getElementById('delta-display');
+            dd.textContent = (delta >= 0 ? '+' : '-') + fmt(Math.abs(delta));
+            dd.className = 'delta-display ' + (Math.abs(delta) < 5 ? 'neutral' : delta > 0 ? 'behind' : 'ahead');
+            document.getElementById('delta-target').textContent = `想定 ${fmt(target)}`;
 
-            document.getElementById('delta-target').textContent =
-                `（想定クリア: ${fmt(targetSec)}）`;
-
-            // --- next button ---
-            document.getElementById('btn-next').disabled = finished || currentQ >= QUESTIONS.length - 1;
-
-            // --- clear overlay ---
-            if (currentQ >= QUESTIONS.length - 1 && elapsed > 0) {
-                // show after last next press — handled in nextQuestion
-            }
+            document.getElementById('btn-next').disabled = currentQ >= QUESTIONS.length - 1;
         }
 
-        // ══════════════════════════════════════════════
-        //  Next question
-        // ══════════════════════════════════════════════
         function nextQuestion() {
             if (currentQ >= QUESTIONS.length - 1) return;
             currentQ++;
-            if (currentQ === QUESTIONS.length - 1) {
-                // last question reached — no auto overlay
-            }
             render();
         }
 
-        // ══════════════════════════════════════════════
-        //  Pause  ← 誤操作防止: 2回押しで確定
-        // ══════════════════════════════════════════════
         function handlePause() {
             const btn = document.getElementById('btn-pause');
-
             if (!pauseConfirm) {
-                // 1回目：確認モード
                 pauseConfirm = true;
                 btn.classList.add('confirm-mode');
-                btn.textContent = '本当に？ → もう一度押す';
+                btn.textContent = '本当に？もう一度';
                 pauseTimer = setTimeout(() => {
                     pauseConfirm = false;
                     btn.classList.remove('confirm-mode');
                     btn.textContent = paused ? '▶ 再開' : '⏸ 一時停止';
                 }, 3000);
             } else {
-                // 2回目：実行
                 clearTimeout(pauseTimer);
                 pauseConfirm = false;
                 btn.classList.remove('confirm-mode');
@@ -588,16 +484,12 @@
             }
         }
 
-        // ══════════════════════════════════════════════
-        //  Reset  ← 誤操作防止: 2回押しで確定
-        // ══════════════════════════════════════════════
         function handleReset() {
             const btn = document.getElementById('btn-reset');
-
             if (!resetConfirm) {
                 resetConfirm = true;
                 btn.classList.add('confirm-mode');
-                btn.textContent = '本当に？ → もう一度押す';
+                btn.textContent = '本当に？もう一度';
                 resetTimer = setTimeout(() => {
                     resetConfirm = false;
                     btn.classList.remove('confirm-mode');
@@ -608,23 +500,15 @@
                 resetConfirm = false;
                 btn.classList.remove('confirm-mode');
                 btn.textContent = '↺ リセット';
-
-                // 実際のリセット
-                remaining = TOTAL_SEC;
-                elapsed = 0;
-                currentQ = 0;
-                paused = false;
-                finished = false;
+                remaining = TOTAL_SEC; elapsed = 0; currentQ = 0;
+                paused = false; finished = false;
                 document.getElementById('overlay-clear').classList.remove('show');
                 document.getElementById('btn-pause').textContent = '⏸ 一時停止';
                 render();
             }
         }
 
-        // ══════════════════════════════════════════════
-        //  Boot
-        // ══════════════════════════════════════════════
-        start();
+        render();
     </script>
 </body>
 

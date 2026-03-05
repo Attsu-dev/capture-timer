@@ -223,7 +223,7 @@
         const SHEET_NAME = 'シート1';
 
         // ===== データ =====
-        let scenes = [];   // [{name, clearTime, steps: [{label, script}]}]
+        let scenes = [];   // [{name, steps: [{label, clearTime, script}]}]
         let currentScene = 0;
         let currentStep = 0;
 
@@ -232,7 +232,6 @@
         let remaining = TOTAL_SEC;
         let timerRunning = false;
         let timerInterval = null;
-        let sceneStartRemaining = TOTAL_SEC;
 
         // ===== 起動時にスプレッドシートを自動読み込み =====
         window.addEventListener('DOMContentLoaded', async () => {
@@ -291,7 +290,6 @@
             }
             currentScene = 0;
             currentStep = 0;
-            sceneStartRemaining = remaining;
         }
 
         function parseTime(str) {
@@ -349,7 +347,6 @@
         function resetTimer() {
             pauseTimer();
             remaining = TOTAL_SEC;
-            sceneStartRemaining = TOTAL_SEC;
             updateTimerDisplay();
         }
 
@@ -360,11 +357,24 @@
             timerEl.textContent = formatTime(remaining);
             timerEl.className = remaining <= 60 ? 'danger' : remaining <= 300 ? 'warning' : '';
 
-            const scene = scenes[currentScene];
-            const step = scene && scene.steps[currentStep];
-            if (step && step.clearTime > 0) {
-                const expectedRemaining = sceneStartRemaining - step.clearTime;
-                const diff = remaining - expectedRemaining;
+            // 現在のステップまでの想定タイム累計を計算
+            let totalExpected = 0;
+            for (let si = 0; si < scenes.length; si++) {
+                for (let ti = 0; ti < scenes[si].steps.length; ti++) {
+                    // 現在のステップに達したら加算をやめる
+                    if (si === currentScene && ti === currentStep) break;
+                    totalExpected += scenes[si].steps[ti].clearTime || 0;
+                    if (si === currentScene && ti === currentStep) break;
+                }
+                if (si === currentScene) break;
+            }
+            // 現在のステップの想定タイムも加算
+            const curStep = scenes[currentScene] && scenes[currentScene].steps[currentStep];
+            if (curStep) totalExpected += curStep.clearTime || 0;
+
+            if (totalExpected > 0) {
+                const elapsed = TOTAL_SEC - remaining;          // 実際の経過時間
+                const diff = totalExpected - elapsed;         // +なら余裕、-なら遅れ
                 const sign = diff >= 0 ? '+' : '-';
                 diffEl.textContent = sign + formatTime(Math.abs(diff));
                 diffEl.className = diff >= 0 ? 'positive' : 'negative';
@@ -389,13 +399,11 @@
             if (newStep < 0) {
                 if (currentScene > 0) {
                     currentScene--;
-                    sceneStartRemaining = remaining;
                     currentStep = scenes[currentScene].steps.length - 1;
                 }
             } else if (newStep >= scene.steps.length) {
                 if (currentScene < scenes.length - 1) {
                     currentScene++;
-                    sceneStartRemaining = remaining;
                     currentStep = 0;
                 }
             } else {

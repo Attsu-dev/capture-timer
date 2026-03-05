@@ -220,7 +220,7 @@
     <script>
         // ===== スプレッドシートID（ここを変更するだけでデータ先を切り替えられる） =====
         const SHEET_ID = '1A4LyHfqfTOxgDDR0yHc_fZcBSYmhlvMxYSC4Ud3NdEI';
-        const SHEET_NAME = 'data';
+        const SHEET_NAME = 'シート1';
 
         // ===== データ =====
         let scenes = [];   // [{name, clearTime, steps: [{label, script}]}]
@@ -253,8 +253,9 @@
 
         // ===== CSV パース =====
         // フォーマット（1行目はヘッダー）:
-        // A: シーン名 | B: 想定クリアタイム(mm:ss) | C: ステップ名 | D: 台本
+        // A: シーン名 | B: ステップ名 | C: 想定タイム(mm:ss) | D: 台本
         // 同じシーン名が続く行は同じシーンに属する
+        // 台本列が空でシーン名・ステップ名も空の行は、直前のステップの台本の続き（改行）として扱う
         function parseCSV(text) {
             const rows = csvToArray(text);
             if (rows.length < 2) throw new Error('データが空です');
@@ -263,16 +264,27 @@
             let lastSceneName = null;
 
             for (let i = 1; i < rows.length; i++) {
-                const [sceneName, clearTime, stepLabel, script] = rows[i];
-                if (!sceneName && !stepLabel) continue;
+                const [sceneName, stepLabel, clearTime, script] = rows[i];
+
+                // シーン名もステップ名もない → 直前ステップの台本に改行して追記
+                if (!sceneName && !stepLabel) {
+                    if (scenes.length > 0) {
+                        const lastScene = scenes[scenes.length - 1];
+                        if (lastScene.steps.length > 0) {
+                            lastScene.steps[lastScene.steps.length - 1].script += '\n' + (script || '');
+                        }
+                    }
+                    continue;
+                }
 
                 if (sceneName && sceneName !== lastSceneName) {
-                    scenes.push({ name: sceneName, clearTime: parseTime(clearTime), steps: [] });
+                    scenes.push({ name: sceneName, steps: [] });
                     lastSceneName = sceneName;
                 }
                 if (stepLabel !== undefined) {
                     scenes[scenes.length - 1].steps.push({
                         label: stepLabel || '',
+                        clearTime: parseTime(clearTime),
                         script: script || ''
                     });
                 }
@@ -347,8 +359,9 @@
             timerEl.className = remaining <= 60 ? 'danger' : remaining <= 300 ? 'warning' : '';
 
             const scene = scenes[currentScene];
-            if (scene && scene.clearTime > 0) {
-                const expectedRemaining = sceneStartRemaining - scene.clearTime;
+            const step = scene && scene.steps[currentStep];
+            if (step && step.clearTime > 0) {
+                const expectedRemaining = sceneStartRemaining - step.clearTime;
                 const diff = remaining - expectedRemaining;
                 const sign = diff >= 0 ? '+' : '-';
                 diffEl.textContent = sign + formatTime(Math.abs(diff));

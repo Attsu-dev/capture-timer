@@ -357,24 +357,12 @@
             timerEl.textContent = formatTime(remaining);
             timerEl.className = remaining <= 60 ? 'danger' : remaining <= 300 ? 'warning' : '';
 
-            // 現在のステップまでの想定タイム累計を計算
-            let totalExpected = 0;
-            for (let si = 0; si < scenes.length; si++) {
-                for (let ti = 0; ti < scenes[si].steps.length; ti++) {
-                    // 現在のステップに達したら加算をやめる
-                    if (si === currentScene && ti === currentStep) break;
-                    totalExpected += scenes[si].steps[ti].clearTime || 0;
-                    if (si === currentScene && ti === currentStep) break;
-                }
-                if (si === currentScene) break;
-            }
-            // 現在のステップの想定タイムも加算
             const curStep = scenes[currentScene] && scenes[currentScene].steps[currentStep];
-            if (curStep) totalExpected += curStep.clearTime || 0;
-
-            if (totalExpected > 0) {
-                const elapsed = TOTAL_SEC - remaining;          // 実際の経過時間
-                const diff = totalExpected - elapsed;         // +なら余裕、-なら遅れ
+            if (curStep && curStep.clearTime > 0) {
+                // 想定タイム = ゲーム開始からの経過時間
+                // このステップにいるべき残り時間 = TOTAL_SEC - clearTime
+                const expectedRemaining = TOTAL_SEC - curStep.clearTime;
+                const diff = remaining - expectedRemaining; // +なら早い、-なら遅れ
                 const sign = diff >= 0 ? '+' : '-';
                 diffEl.textContent = sign + formatTime(Math.abs(diff));
                 diffEl.className = diff >= 0 ? 'positive' : 'negative';

@@ -301,31 +301,33 @@
             return parseInt(str) || 0;
         }
 
+        // セル内改行（"...\n..."）に対応したCSVパーサー
+        // 文字列全体を1文字ずつ読み、ダブルクォート内の改行は行区切りとして扱わない
         function csvToArray(text) {
             const rows = [];
-            for (const line of text.split('\n')) {
-                if (!line.trim()) continue;
-                rows.push(parseCsvLine(line));
-            }
-            return rows;
-        }
+            let cur = '', inQ = false, row = [];
 
-        function parseCsvLine(line) {
-            const result = [];
-            let cur = '', inQ = false;
-            for (let i = 0; i < line.length; i++) {
-                const c = line[i];
+            for (let i = 0; i < text.length; i++) {
+                const c = text[i];
                 if (c === '"') {
-                    if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
+                    if (inQ && text[i + 1] === '"') { cur += '"'; i++; } // エスケープ ""
                     else inQ = !inQ;
                 } else if (c === ',' && !inQ) {
-                    result.push(cur); cur = '';
+                    row.push(cur); cur = '';
+                } else if ((c === '\n' || (c === '\r' && text[i + 1] === '\n')) && !inQ) {
+                    if (c === '\r') i++; // \r\n を1つとして処理
+                    row.push(cur); cur = '';
+                    if (row.some(cell => cell.trim())) rows.push(row); // 空行はスキップ
+                    row = [];
                 } else {
                     cur += c;
                 }
             }
-            result.push(cur);
-            return result;
+            // 最終行
+            row.push(cur);
+            if (row.some(cell => cell.trim())) rows.push(row);
+
+            return rows;
         }
 
         // ===== タイマー =====
